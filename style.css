@@ -1,22 +1,28 @@
 body {
-    font-family: Arial, sans-serif;
+    position: center;
+    font-family: "Georgia",  serif;
     background-color: #47a2cc8a;
-    display: flex;
+    display:block;
     justify-content: center;
     align-items: center;
+    width: 200;
     height: 100vh;
-    margin: 0;
+    margin: 20px;
 }
 
 .container {
-    background: #3081ce;
-    padding: 20px;
+    width: 70%;
+    max-width: 600px;
+    background: #ffe5b4;
+    padding: 10px;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(187, 140, 140, 0.1);
 }
 
 h1 {
-    margin-bottom: 20px;
+    
+    margin: 20px;
+    outline-style: dotted;
 }
 
 input {
@@ -40,6 +46,7 @@ li {
     align-items: center;
     padding: 10px;
     border-bottom: 1px solid #ca353562;
+    margin: 5px;
 }
 
 button {
@@ -55,12 +62,13 @@ button {
   
 }
 button:hover {
-    background: #0056b3;
+    background: #b6e438;
 }
 
 button.edit {
     border-style: inset;
     background: #28a745;
+    margin: 5px;
 }
 
 button.edit:hover {

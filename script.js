@@ -1,59 +1,112 @@
-//  render a single task
-function renderTask(taskText, taskId, completed = false) {
-    const taskList = document.getElementById('taskList');
-    
-    const li = document.createElement('li');
-    li.id = taskId;
-    li.innerHTML = `
-        <input type="checkbox" ${completed ? 'checked' : ''} onclick="toggleComplete('${taskId}')">
-        <span>${taskText}</span>
-        <button class="edit" onclick="editTask('${taskId}')">Update</button>
-        <button class="delete" onclick="deleteTask('${taskId}')">Delete</button>
-    `;
-    
-    taskList.appendChild(li);
-}
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('todo-form');
+    const input = document.getElementById('todo-input');
+    const todoList = document.getElementById('todo-list');
 
-// add a new task
-function addTask() {
-    const taskInput = document.getElementById('taskInput');
-    const taskText = taskInput.value.trim();
-    if (taskText === '') return;
+    // Load existing todos from localStorage
+    const loadTodos = () => {
+        const todos = JSON.parse(localStorage.getItem('todos')) || [];
+        todos.forEach(todo => addTodoToList(todo));
+    };
 
-    const taskId = Date.now().toString();
-    const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-    tasks.push({ text: taskText, id: taskId });
-    localStorage.setItem('tasks', JSON.stringify(tasks));
+    // Save todos to localStorage
+    const saveTodos = (todos) => {
+        localStorage.setItem('todos', JSON.stringify(todos));
+    };
 
-    renderTask(taskText, taskId);
-    taskInput.value = '';
-}
+    // Add todo to the list
+    const addTodoToList = (todo) => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item todo-item';
+        li.innerHTML = `
+            <div class="d-flex align-items-center">
+                <input type="checkbox" class="mr-2" ${todo.completed ? 'checked' : ''}>
+                <span ${todo.completed ? 'style="text-decoration: line-through;"' : ''}>${todo.text}</span>
+            </div>
+            <div>
+                <button class="btn btn-warning btn-sm mr-2 edit-btn">Edit</button>
+                <button class="btn btn-danger btn-sm delete-btn">Delete</button>
+            </div>
+        `;
+        todoList.appendChild(li);
 
-//  remove a task
-function deleteTask(taskId) {
-    const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-    const updatedTasks = tasks.filter(task => task.id !== taskId);
-    localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+        // Edit button
+        li.querySelector('.edit-btn').addEventListener('click', () => {
+            Swal.fire({
+                title: 'Edit Task',
+                input: 'text',
+                inputValue: todo.text,
+                showCancelButton: true,
+                confirmButtonText: 'Updated',
+                cancelButtonText: 'Cancel',
+                inputValidator: (value) => {
+                    if (!value) {
+                        return 'You need to write something!';
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    todo.text = result.value;
+                    li.querySelector('span').textContent = todo.text;
+                    saveTodos(getTodosFromList());
+                }
+            });
+        });
 
-    const taskList = document.getElementById('taskList');
-    const taskItem = document.getElementById(taskId);
-    taskList.removeChild(taskItem);
-}
+        // Delete button
+        li.querySelector('.delete-btn').addEventListener('click', () => {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "The will be removed permanently",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    li.remove();
+                    saveTodos(getTodosFromList());
+                    Swal.fire(
+                        'Deleted!',
+                        'Your task has been deleted.',
+                        'success'
+                    );
+                }
+            });
+        });
 
-// edit a task
-function editTask(taskId) {
-    const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-    const task = tasks.find(task => task.id === taskId);
-    
-    const newTaskText = prompt('Edit task:', task.text);
-    if (newTaskText === null || newTaskText.trim() === '') return;
+        // Checkbox
+        li.querySelector('input[type="checkbox"]').addEventListener('change', (e) => {
+            todo.completed = e.target.checked;
+            li.querySelector('span').style.textDecoration = todo.completed ? 'line-through' : 'none';
+            saveTodos(getTodosFromList());
+        });
+    };
 
-    task.text = newTaskText.trim();
-    localStorage.setItem('tasks', JSON.stringify(tasks));
+    // Get todos from the list
+    const getTodosFromList = () => {
+        const todos = [];
+        document.querySelectorAll('.todo-item').forEach(li => {
+            todos.push({
+                text: li.querySelector('span').textContent,
+                completed: li.querySelector('input[type="checkbox"]').checked
+            });
+        });
+        return todos;
+    };
 
-    const taskItem = document.getElementById(taskId);
-    taskItem.querySelector('span').textContent = task.text;
-}
+    // Handle form submission
+    form.addEventListener('Enter', (e) => {
+        e.preventDefault();
+        const text = input.value.trim();
+        if (text) {
+            const todo = { text, completed: false };
+            addTodoToList(todo);
+            input.value = '';
+            saveTodos(getTodosFromList());
+        }
+    });
 
-// Load tasks when the page loads
-document.addEventListener('DOMContentLoaded', loadTasks);
+    // Initial load
+    loadTodos();
+});
